@@ -1,0 +1,21 @@
+{
+  "name": "honeycomb",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/honeycomb.js",
+  "types": "dist/honeycomb.d.ts",
+  "scripts": {
+    "start": "ts-node src/main.ts",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sufal54/honeycomb.git"
+  },
+  "author": "sufal bala",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^22.15.17",
+    "typescript": "^5.8.3"
+  }
+}
