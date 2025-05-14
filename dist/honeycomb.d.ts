@@ -1,0 +1,33 @@
+import { Req, Res } from "./reqRes";
+type Next = () => void;
+type Middleware = (req: Req, res: Res, next: Next) => void;
+type FinalHandle = (req: Req, res: Res) => void;
+type RouterHandle = Middleware | FinalHandle;
+declare class App {
+    private routes;
+    private middleware;
+    use(middleware: Middleware): void;
+    private appRoute;
+    get(path: string, handle: FinalHandle): void;
+    get(path: string, m1: Middleware, handle: FinalHandle): void;
+    get(path: string, m1: Middleware, m2: Middleware, handle: FinalHandle): void;
+    get(path: string, ...handles: RouterHandle[]): void;
+    post(path: string, handle: FinalHandle): void;
+    post(path: string, m1: Middleware, handle: FinalHandle): void;
+    post(path: string, m1: Middleware, m2: Middleware, handle: FinalHandle): void;
+    post(path: string, ...handles: RouterHandle[]): void;
+    put(path: string, handle: FinalHandle): void;
+    put(path: string, m1: Middleware, handle: FinalHandle): void;
+    put(path: string, m1: Middleware, m2: Middleware, handle: FinalHandle): void;
+    put(path: string, ...handles: RouterHandle[]): void;
+    delete(path: string, handle: FinalHandle): void;
+    delete(path: string, m1: Middleware, handle: FinalHandle): void;
+    delete(path: string, m1: Middleware, m2: Middleware, handle: FinalHandle): void;
+    delete(path: string, ...handles: RouterHandle[]): void;
+    listen(port: number, callback?: () => void): void;
+    private handleRequest;
+    private bodyParsed;
+    private pathToRegex;
+}
+export declare const honeycomb: () => App;
+export { Res, Req, Next };

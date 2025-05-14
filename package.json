@@ -8,6 +8,9 @@
     "start": "ts-node src/main.ts",
     "build": "tsc"
   },
+  "files":[
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/sufal54/honeycomb.git"

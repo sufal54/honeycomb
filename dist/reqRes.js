@@ -24,5 +24,9 @@ class Res extends node_http_1.ServerResponse {
         this.setHeader("Content-Type", "text/plain");
         this.end(body);
     }
+    cookie(tokenName, token, { HttpOnly = false, MaxAge, Secure = false, SameSite }) {
+        this.setHeader("Set-Cookie", `${tokenName}=${token}; Max-Age=${MaxAge}; ${Secure ? "Secure;" : ""} ${HttpOnly ? "HttpOnly;" : ""} ${SameSite ? SameSite + ";" : ""}`);
+        return this;
+    }
 }
 exports.Res = Res;
