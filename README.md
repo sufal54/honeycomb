@@ -1,4 +1,3 @@
-
 # Honeycomb
 
 **Honeycomb** is a clean and minimal web framework inspired by Express.js — built entirely from scratch using **raw TypeScript** with **no external libraries**.
@@ -13,12 +12,12 @@ npm install @sufalctl/honeycomb
 
 ## Features
 
-- Lightweight and fast  
-- Built with raw TypeScript (no dependencies)  
-- HTTP methods: `.get()`, `.post()`, `.put()`, `.delete()`  
-- Path parameters (e.g., `/user/:id`)  
-- Query parameter parsing  
-- Body parsing for JSON and plain text  
+- Lightweight and fast
+- Built with raw TypeScript (no dependencies)
+- HTTP methods: `.get()`, `.post()`, `.put()`, `.delete()`
+- Path parameters (e.g., `/user/:id`)
+- Query parameter parsing
+- Body parsing for JSON and plain text
 - Middleware system:
   - Global middleware via `.use()`
   - Route-specific and multi-layered middleware
@@ -30,30 +29,79 @@ npm install @sufalctl/honeycomb
 ## Example
 
 ```ts
-import { Honeycomb } from '@sufalctl/honeycomb';
+import { honeycomb, Req, Res, Next } from "./lib/honeycomb";
 
-const app = new Honeycomb();
+const app = honeycomb();
 
-// Global middleware
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
+// Global Middleware
+app.use((req: Req, res: Res, next: Next) => {
+  console.log("Global Middleware");
   next();
 });
 
-// Route with path parameter
-app.get('/hello/:name', (req, res) => {
-  const { name } = req.params;
-  res.send(`Hello, ${name}!`);
+//Get Request
+app.get("/login", (req: Req, res: Res) => {
+  // Set Cookie
+  res
+    .cookie("tokenName", "token", {
+      HttpOnly: true,
+      Secure: true,
+      SameSite: "strict",
+      MaxAge: 24 * 60 * 60 * 1000,
+    })
+    .status(200)
+    .send("Hello From Server");
 });
 
-// POST route with JSON body
-app.post('/data', (req, res) => {
-  res.json({ received: req.body });
+// Specific Route or Multiple Layer of Middleware suppoted
+// Post Request
+app.post(
+  "/post",
+  (req: Req, res: Res, next: Next) => {
+    console.log("Middleware 1");
+    next();
+  },
+  (req: Req, res: Res, next: Next) => {
+    console.log("Middleware 2");
+    next();
+  },
+  (req: Req, res: Res) => {
+    try {
+      // For Body Parse Method Must be PUT or POST
+      const { id, name } = req.body;
+      res.status(200).json({ success: true, message: `${id}: ${name}` });
+    } catch (e) {
+      res
+        .status(500)
+        .json({ success: false, message: "Internal Server Error" });
+    }
+  }
+);
+
+// Path Parameters /path/1/Alice
+// Put Request
+app.put("/path/:id/:name", (req, res) => {
+  try {
+    const { id, name } = req.params;
+    res.status(200).json({ success: true, message: `${id}: ${name}` });
+  } catch (e) {
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+});
+// Query /path?name=Alice
+// Delete Request
+app.delete("/path", (req, res) => {
+  try {
+    const { name } = req.query;
+    res.status(200).json({ success: true, message: `Delete ${name}` });
+  } catch (e) {
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
 });
 
-// Start the server
+// Listening
 app.listen(3000, () => {
-  console.log('Honeycomb server running on http://localhost:3000');
+  console.log("Server Started");
 });
 ```
 
