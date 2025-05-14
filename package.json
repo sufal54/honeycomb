@@ -1,6 +1,6 @@
 {
-  "name": "honeycomb",
-  "version": "1.0.0",
+  "name": "@sufalctl/honeycomb",
+  "version": "1.0.1",
   "description": "",
   "main": "dist/honeycomb.js",
   "types": "dist/honeycomb.d.ts",
