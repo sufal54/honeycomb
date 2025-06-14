@@ -1,3 +1,4 @@
+import { promises } from "node:dns";
 import { IncomingMessage, ServerResponse } from "node:http";
 
 export class Req extends IncomingMessage {
@@ -27,5 +28,10 @@ export class Res extends ServerResponse {
             `${tokenName}=${token}; Max-Age=${MaxAge}; ${Secure ? "Secure;" : ""} ${HttpOnly ? "HttpOnly;" : ""} ${SameSite ? SameSite + ";" : ""}`
         )
         return this;
+    }
+
+    async render(view: string, data?: Record<string, any>): Promise<void> {
+        this.writeHead(400, { "content-type": "text/plain" });
+        this.end();
     }
 }

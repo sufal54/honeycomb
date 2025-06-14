@@ -1,5 +1,7 @@
-import { createServer, IncomingMessage, ServerResponse } from "node:http";
+import { createServer } from "node:http";
 import { Req, Res } from "./reqRes";
+import path from "node:path";
+import fs from "fs";
 
 type Next = () => void;
 type Middleware = (req: Req, res: Res, next: Next) => void;
@@ -16,8 +18,57 @@ class App {
     }>> = {};
     private middleware: Middleware[] = [];
 
+    private settings: Record<string, string> = {};
+
+    private ejs: any;
+
     use(middleware: Middleware) {
         this.middleware.push(middleware);
+    }
+
+    set(key: string, value: string) {
+        this.settings[key] = value;
+    }
+
+    async rendeViews(view: string, data: Record<string, any>) {
+        let ejs: typeof import("ejs");
+        try {
+            ejs = require("ejs");
+        } catch (err) {
+            throw new Error("EJS is not installed. Please run: npm install ejs");
+        }
+        const viewDir = this.settings["views"] || "./views";
+        const filePath = path.join(viewDir, `${view}.ejs`);
+
+        if (!fs.existsSync(filePath)) {
+            throw new Error(`view "${view}.ejs" not found`);
+        }
+
+        return await ejs.renderFile(filePath, data || {}, { async: true });
+    }
+
+    private serveStaticFile(req: Req, res: Res): boolean {
+        const staticDir = this.settings["static"] || "./public";
+        const url = req.url || "/"
+        const filePath = path.join(staticDir, decodeURIComponent(url));
+
+        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+            const types: Record<string, string> = {
+                ".css": "text/css",
+                ".js": "application/javascript",
+                ".png": "image/png",
+                ".jpg": "image/jpg",
+                ".svg": "image/svg+xml"
+            }
+
+            const ext = path.extname(filePath).toLowerCase();
+            const contentType = types[ext] || "application/octet-stream";
+
+            res.writeHead(200, { "content-type": contentType });
+            fs.createReadStream(filePath).pipe(res);
+            return true;
+        }
+        return false;
     }
 
     // overload
@@ -115,12 +166,20 @@ class App {
 
     private async handleRequest(req: Req, res: Res) {
         const method = req.method || "GET";
-
         const routers = this.routes[method];
-
         if (!routers) {
             res.status(404).json({ success: false, message: "Not Found" });
         }
+        if (this.serveStaticFile(req, res)) {
+            return;
+        }
+
+        res.render = async (view: string, data?: Record<string, any>): Promise<void> => {
+            res.writeHead(200, { "content-type": "text/html" });
+            const html = await this.rendeViews(view, data || {});
+            res.end(html);
+        }
+
 
         const url = req.url || "/";
         const [pathName, queryString = ""] = url.split("?");
