@@ -1,12 +1,17 @@
 import { Req, Res } from "./reqRes";
-type Next = () => void;
-type Middleware = (req: Req, res: Res, next: Next) => void;
-type FinalHandle = (req: Req, res: Res) => void;
-type RouterHandle = Middleware | FinalHandle;
+declare type Next = () => void;
+declare type Middleware = (req: Req, res: Res, next: Next) => void;
+declare type FinalHandle = (req: Req, res: Res) => void;
+declare type RouterHandle = Middleware | FinalHandle;
 declare class App {
     private routes;
     private middleware;
+    private settings;
+    private ejs;
     use(middleware: Middleware): void;
+    set(key: string, value: string): void;
+    rendeViews(view: string, data: Record<string, any>): Promise<string>;
+    private serveStaticFile;
     private appRoute;
     get(path: string, handle: FinalHandle): void;
     get(path: string, m1: Middleware, handle: FinalHandle): void;

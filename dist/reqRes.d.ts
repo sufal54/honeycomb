@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { IncomingMessage, ServerResponse } from "node:http";
 export declare class Req extends IncomingMessage {
     params: any;
@@ -14,4 +15,5 @@ export declare class Res extends ServerResponse {
         Secure?: boolean;
         SameSite?: string;
     }): this;
+    render(view: string, data?: Record<string, any>): Promise<void>;
 }

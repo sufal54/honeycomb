@@ -8,19 +8,65 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Req = exports.Res = exports.honeycomb = void 0;
 const node_http_1 = require("node:http");
 const reqRes_1 = require("./reqRes");
 Object.defineProperty(exports, "Req", { enumerable: true, get: function () { return reqRes_1.Req; } });
 Object.defineProperty(exports, "Res", { enumerable: true, get: function () { return reqRes_1.Res; } });
+const node_path_1 = __importDefault(require("node:path"));
+const fs_1 = __importDefault(require("fs"));
 class App {
     constructor() {
         this.routes = {};
         this.middleware = [];
+        this.settings = {};
     }
     use(middleware) {
         this.middleware.push(middleware);
+    }
+    set(key, value) {
+        this.settings[key] = value;
+    }
+    rendeViews(view, data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let ejs;
+            try {
+                ejs = require("ejs");
+            }
+            catch (err) {
+                throw new Error("EJS is not installed. Please run: npm install ejs");
+            }
+            const viewDir = this.settings["views"] || "./views";
+            const filePath = node_path_1.default.join(viewDir, `${view}.ejs`);
+            if (!fs_1.default.existsSync(filePath)) {
+                throw new Error(`view "${view}.ejs" not found`);
+            }
+            return yield ejs.renderFile(filePath, data || {}, { async: true });
+        });
+    }
+    serveStaticFile(req, res) {
+        const staticDir = this.settings["static"] || "./public";
+        const url = req.url || "/";
+        const filePath = node_path_1.default.join(staticDir, decodeURIComponent(url));
+        if (fs_1.default.existsSync(filePath) && fs_1.default.statSync(filePath).isFile()) {
+            const types = {
+                ".css": "text/css",
+                ".js": "application/javascript",
+                ".png": "image/png",
+                ".jpg": "image/jpg",
+                ".svg": "image/svg+xml"
+            };
+            const ext = node_path_1.default.extname(filePath).toLowerCase();
+            const contentType = types[ext] || "application/octet-stream";
+            res.writeHead(200, { "content-type": contentType });
+            fs_1.default.createReadStream(filePath).pipe(res);
+            return true;
+        }
+        return false;
     }
     appRoute(method, path, ...handles) {
         if (!this.routes[method]) {
@@ -86,6 +132,14 @@ class App {
             if (!routers) {
                 res.status(404).json({ success: false, message: "Not Found" });
             }
+            if (this.serveStaticFile(req, res)) {
+                return;
+            }
+            res.render = (view, data) => __awaiter(this, void 0, void 0, function* () {
+                res.writeHead(200, { "content-type": "text/html" });
+                const html = yield this.rendeViews(view, data || {});
+                res.end(html);
+            });
             const url = req.url || "/";
             const [pathName, queryString = ""] = url.split("?");
             const params = new URLSearchParams(queryString);
